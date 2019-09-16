@@ -51,29 +51,19 @@ def threhold_vs_num_of_pair():
     plt.bar(x=this_x, height=series[3:10], label='', color='purple', alpha=0.8)
     plt.xticks(this_x,this_x)
     plt.show()
-def compare_num_parnter_of_diffrent_dept_under_specific_threhold(threhold = 8):
-    df = pd.read_csv(open("2015年球季学期不同学院不同阀值下的人均友数.csv",encoding='utf-8-sig'))
+def compare_num_parnter_of_diffrent_attribution_under_specific_threhold(attribution,threhold = 8):
+    df = pd.read_csv(open("2015年球季学期不同{}不同阀值下的人均友数.csv".format(attribution),encoding='utf-8-sig'))
     for column in df.columns:
         if "Unnamed" in column:
             df.drop(column,axis=1)
-    df = df.sort_values(str(threhold),ascending= False)
+    df = df.sort_values(str(threhold),ascending= True)
     df = df.reset_index(drop=True)
-    print(df.loc[:,['PATRON_DEPT',str(threhold)]])
-    labels = df.loc[:,'PATRON_DEPT'].values
-    labels = list(labels[:19])
-    labels.append('others')
-    labels = labels[::-1]
-    data =  df.loc[:,str(threhold)].values
-    sizes = list(data[:19])
-    sizes.append(sum(data[19:])/len(data[19:]))
-    sizes = sizes[::-1]
-    print(sizes)
+    labels = df.loc[:,attribution].values
+    sizes =  df.loc[:,str(threhold)].values
+    fig = plt.figure(figsize=(8,10))
     plt.bar(x = 0,bottom=list(range(len(labels))),width = sizes,orientation="horizontal",height=0.5)
-    plt.title("2015年秋季学期不同学院阀值{}下的人均友数".format(threhold))
-    plt.yti
-
-
-    cks(list(range(len(labels))),labels,fontsize = 10)
+    plt.title("2015年秋季学期不同{}阀值{}下的人均友数".format(attribution,threhold))
+    plt.yticks(list(range(len(labels))),labels,fontsize = 10)
     plt.show()
 def compare_num_parnter_of_diffrent_dept():
     fig = plt.figure(figsize=(20,8))
@@ -105,4 +95,61 @@ def compare_num_parnter_of_diffrent_dept():
     ax.set_yticklabels(list(range(4,16)))
     ax.set_zlabel("人均友数")
     plt.show()
-compare_num_parnter_of_diffrent_dept_under_specific_threhold()
+def threeD_Histogram_num_property_parnter_of_different_property(attribution):
+    # Fixing random state for reproducibility
+
+    fig = plt.figure()
+    df = pd.read_csv(open("2015年球季学期不同{}下不同{}馆友数.csv".format(attribution,attribution), encoding='utf-8-sig'))
+    df = df.set_index("His|Partner")
+    need_drop = list(df[df['num_of_PATRON_DEPT'] < 10].index)
+    print(need_drop)
+    df = df.drop(columns="num_of_PATRON_DEPT")
+    df = df.drop(columns="total_num_of_partner")
+    df = df.drop(columns="ratio_diffrent")
+    df = df.drop(need_drop)
+    df = df.drop(columns=need_drop)
+
+    xlabels = list(df.index)
+    x = list(range(len(xlabels)))
+    ylabels = list(df.columns)
+    y = list(range(len(ylabels)))
+    ax = fig.add_subplot(111, projection='3d')
+    print(df)
+    x,y= np.meshgrid(x,y)
+    z = []
+    for i in range(len(x)):
+        this = []
+        for j in range(len(x[0])):
+            that  = float(df.loc[xlabels[j],ylabels[i]])
+            this.append(that)
+
+        z.append(this)
+    z = np.array(z).reshape(df.shape)
+    print(z)
+    # Plot a basic wireframe.
+    ax.plot_wireframe(x, y, z, rstride=10, cstride=10)
+    ax.set_xticks(list(range(len(x))))
+    ax.set_yticks(list(range(len(x))))
+    ax.set_xlabel("dept")
+    ax.set_ylabel("dept")
+    ax.set_zlabel("人均友数")
+    ax.set_zlim(0,np.max(z))
+    print(np.max(z))
+    plt.show()
+def bar_of_ratio_of_diffrent_attribution(attribution):
+    fig = plt.figure()
+    df = pd.read_csv(open("2015年球季学期不同{}下不同{}馆友数.csv".format(attribution,attribution), encoding='utf-8-sig'))
+    df = df.set_index("His|Partner")
+    need_drop = list(df[df['ratio_diffrent'] == 0].index) + list(df[df['num_of_PATRON_DEPT'] < 10].index)  + list(df[df['total_num_of_partner'] < 10].index)
+
+    df = df.drop(need_drop)
+    df = df.drop(columns=need_drop)
+    labels = list(df.index)
+    sizes = list(df["ratio_diffrent"].values)
+    fig1, ax1 = plt.subplots()
+    plt.bar(x = 0,bottom=list(range(len(labels))),width = sizes,orientation="horizontal",height=0.5)
+    plt.yticks(list(range(len(labels) )),labels,fontsize = 8)
+    plt.legend()
+    plt.title("不同{}不同{}馆友数所占比例".format(attribution,attribution))
+    plt.show()
+bar_of_ratio_of_diffrent_attribution("PATRON_DEPT")
